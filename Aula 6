@@ -1,0 +1,111 @@
+Simulador de Relogios Logicos de Lamport
+Aula 6 - Sistemas Distribuidos
+"""
+
+
+class Processo:
+    def _init_(self, nome):
+        self.nome = nome
+        self.relogio = 0
+
+    def evento_local(self, descricao):
+        self.relogio += 1
+        print(
+            f"{self.nome} | {descricao} "
+            f"| relogio = {self.relogio}"
+        )
+
+    def enviar(self, mensagem):
+        self.relogio += 1
+        print(
+            f"{self.nome} | ENVIA: {mensagem} "
+            f"| relogio = {self.relogio}"
+        )
+        return self.relogio
+
+    def receber(self, mensagem, relogio_recebido):
+        self.relogio = max(
+            self.relogio,
+            relogio_recebido
+        ) + 1
+
+        print(
+            f"{self.nome} | RECEBE: {mensagem} "
+            f"| relogio = {self.relogio}"
+        )
+
+
+def atividade_principal():
+    print("\n=== Atividade principal ===")
+
+    A = Processo("Processo A")
+    B = Processo("Processo B")
+
+    A.evento_local("processou pedido")
+    A.evento_local("validou pagamento")
+
+    B.evento_local("consultou estoque")
+
+    tempo_mensagem = A.enviar(
+        "Pagamento aprovado"
+    )
+
+    B.receber(
+        "Pagamento aprovado",
+        tempo_mensagem
+    )
+
+    B.evento_local("reservou estoque")
+
+    return A, B
+
+
+def desafio_resposta(A, B):
+    print("\n=== Desafio 1: resposta de B para A ===")
+
+    tempo_resposta = B.enviar(
+        "Estoque reservado"
+    )
+
+    A.receber(
+        "Estoque reservado",
+        tempo_resposta
+    )
+
+    A.evento_local("finalizou o pedido")
+
+
+def desafio_tres_processos(A, B):
+    print("\n=== Desafio 3: processos A, B e C ===")
+
+    C = Processo("Processo C")
+
+    C.evento_local("gerou nota fiscal")
+
+    tempo_A_B = A.enviar("Pedido confirmado")
+
+    B.receber(
+        "Pedido confirmado",
+        tempo_A_B
+    )
+
+    tempo_B_C = B.enviar("Pode faturar")
+
+    C.receber(
+        "Pode faturar",
+        tempo_B_C
+    )
+
+    C.evento_local("enviou nota fiscal")
+
+
+def main():
+    A, B = atividade_principal()
+
+    desafio_resposta(A, B)
+
+    desafio_tres_processos(A, B)
+
+
+if _name_ == "_main_":
+    main()
